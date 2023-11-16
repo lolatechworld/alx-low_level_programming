@@ -2,18 +2,19 @@
 #include <string.h>
 #include <stdio.h>
 
-typedef struct list_t
-{
-    char *str;
-    size_t len;
-    struct list_t *next;
-} list_t;
-// Betty declaration
+/**
+ * print_list - prints all the elements of a linked list
+ * @h: pointer to the list_t list to print
+ *
+ * Return: the number of nodes printed
+ */
+
 list_t *head;
 
 size_t print_list(const list_t *h)
 {
     size_t n = 0;
+
     while (h)
     {
         if (!h->str)
@@ -22,7 +23,7 @@ size_t print_list(const list_t *h)
         }
         else
         {
-            printf("[%zu] %s\n", h->len, h->str);
+		 printf("[%u] %s\n", h->len, h->str);
         }
         n++;
         h = h->next;
