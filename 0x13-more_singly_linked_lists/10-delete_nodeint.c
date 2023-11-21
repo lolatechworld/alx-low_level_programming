@@ -1,46 +1,41 @@
 #include "lists.h"
 
 /**
- * delete_nodeint_at_index - Deletes node at specified index in listint_t list.
- * @head: The head of the list.
- * @index: The index of the node to be deleted. Index starts at 0.
+ * delete_nodeint_at_index - deletes a node in a linked list at a certain index
+ * @head: pointer to the first element in the list
+ * @index: index of the node to delete
  *
- * Return: 1 if the node was successfully deleted, -1 if it failed.
+ * Return: 1 (Success), or -1 (Fail)
  */
 int delete_nodeint_at_index(listint_t **head, unsigned int index)
 {
-listint_t *previous_node;
-listint_t *node_to_delete;
-unsigned int i;
+listint_t *temp = *head;
+listint_t *current = NULL;
+unsigned int i = 0;
 
-/* Check if the list is empty or the index is 0 */
-if (*head == NULL || index == 0)
+if (*head == NULL)
+return (-1);
+
+if (index == 0)
 {
-(return -1);
+*head = (*head)->next;
+free(temp);
+return (1);
 }
 
-/* Traverse the list to find the previous node */
-i = 0;
-previous_node = *head;
-while (i < index - 1 && previous_node != NULL)
+while (i < index - 1)
 {
-previous_node = previous_node->next;
+if (!temp || !(temp->next))
+return (-1);
+temp = temp->next;
 i++;
 }
 
-/* Check if the index is valid*/
-if (previous_node == NULL || previous_node->next == NULL)
-{
-(return -1);
-}
-/* Get the node to be deleted */
-node_to_delete = previous_node->next;
 
-/* Update the previous node's next pointer to skip the deleted node */
-previous_node->next = node_to_delete->next;
-
-/* Free the memory allocated to the deleted node */
-free(node_to_delete);
+current = temp->next;
+temp->next = current->next;
+free(current);
 
 return (1);
 }
+
