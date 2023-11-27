@@ -1,75 +1,97 @@
+#include "main.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-
-#define BUF_SIZE 1024
 
 /**
- * _cp - Copies the content of a file to another file.
+ * create_buffer - Allocates 1024 bytes for a buffer.
+ * @file: The name of the file buffer is storing chars for.
  *
- * @file_from: The name of the file to copy from.
- * @file_to: The name of the file to copy to.
- *
- * Return: 0 on success, or -1 on error.
+ * Return: A pointer to the newly-allocated buffer.
  */
+char *create_buffer(char *file)
+{
+	char *fbuf;
 
+	fbuf = malloc(sizeof(char) * 1024);
+
+	if (fbuf == NULL)
+	{
+		dprintf(STDERR_FILENO,
+			"Error: Can't write to %s\n", file);
+		exit(99);
+	}
+
+	return (fbuf);
+}
+
+/**
+ * close_file - Closes file descriptors.
+ * @d: The file descriptor to be closed.
+ */
+void close_file(int d)
+{
+	int fc;
+
+	fc = close(d);
+
+	if (fc == -1)
+	{
+		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", d);
+		exit(100);
+	}
+}
+
+/**
+ * main - Copies the contents of a file to another file.
+ * @argc: The number of arguments supplied to the program.
+ * @argv: An array of pointers to the arguments.
+ *
+ * Return: 0 on success.
+ *
+ * Description: If the argument count is incorrect - exit code 97.
+ *              If file_from does not exist or cannot be read - exit code 98.
+ *              If file_to cannot be created or written to - exit code 99.
+ *              If file_to or file_from cannot be closed - exit code 100.
+ */
 int main(int argc, char *argv[])
 {
-    int fd_from, fd_to;
-    ssize_t bytes_read, bytes_written;
-    char buffer[BUF_SIZE];
+	int ffrom, fto, fr, fw;
+	char *fbuf;
+	mode_t file_perm = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
 
-    if (argc != 3) {
-        dprintf(2, "Usage: cp file_from file_to\n");
-        exit(97);
-    }
+	if (argc != 3)
+	{
+		dprintf(STDERR_FILENO, "Usage: cp file_from file_to\n");
+		exit(97);
+	}
+	fbuf = create_buffer(argv[2]);
+	ffrom = open(argv[1], O_RDONLY);
+	fr = read(ffrom, fbuf, 1024);
+	fto = open(argv[2], O_CREAT | O_WRONLY | O_TRUNC, file_perm);
 
-    fd_from = open(argv[1], O_RDONLY);
-    if (fd_from < 0) {
-        dprintf(2, "Error: Can't read from file %s\n", argv[1]);
-        exit(98);
-    }
+	do {
+		if (ffrom == -1 || fr == -1)
+		{
+			dprintf(STDERR_FILENO,
+				"Error: Can't read from file %s\n", argv[1]);
+			free(fbuf);
+			exit(98);
+		}
 
-    fd_to = open(argv[2], O_WRONLY | O_TRUNC);
-    if (fd_to < 0) {
-        dprintf(2, "Error: Can't write to file %s\n", argv[2]);
-        exit(99);
-    }
+		fw = write(fto, fbuf, fr);
+		if (fto == -1 || fw == -1)
+		{
+			dprintf(STDERR_FILENO,
+				"Error: Can't write to %s\n", argv[2]);
+			free(fbuf);
+			exit(99);
+		}
 
-    do {
-        bytes_read = read(fd_from, buffer, BUF_SIZE);
-        if (bytes_read < 0) {
-            dprintf(2, "Error: Can't read from file %s\n", argv[1]);
-            exit(98);
-        }
+		fr = read(ffrom, fbuf, 1024);
+		fto = open(argv[2], O_WRONLY | O_APPEND);
 
-        if (bytes_read == 0) {
-            break;
-        }
-
-        bytes_written = write(fd_to, buffer, bytes_read);
-        if (bytes_written < 0) {
-            dprintf(2, "Error: Can't write to file %s\n", argv[2]);
-            exit(99);
-        }
-
-        if (bytes_written != bytes_read) {
-            dprintf(2, "Error: Incomplete write\n");
-            exit(99);
-        }
-    } while (1);
-
-    if (close(fd_from) < 0) {
-        dprintf(2, "Error: Can't close fd %d\n", fd_from);
-        exit(100);
-    }
-
-    if (close(fd_to) < 0) {
-        dprintf(2, "Error: Can't close fd %d\n", fd_to);
-        exit(100);
-    }
-
-    exit(0);
+	} while (fr > 0);
+	free(fbuf);
+	close_file(ffrom);
+	close_file(fto);
+	return (0);
 }
