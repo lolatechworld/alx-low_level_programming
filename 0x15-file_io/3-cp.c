@@ -6,6 +6,15 @@
 
 #define BUF_SIZE 1024
 
+/**
+ * _cp - Copies the content of a file to another file.
+ *
+ * @file_from: The name of the file to copy from.
+ * @file_to: The name of the file to copy to.
+ *
+ * Return: 0 on success, or -1 on error.
+ */
+
 int _open_files(const char *file_from, const char *file_to, int *fd_from, int *fd_to) {
     *fd_from = open(file_from, O_RDONLY);
     if (*fd_from < 0) {
